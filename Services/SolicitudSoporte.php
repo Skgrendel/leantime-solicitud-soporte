@@ -402,8 +402,12 @@ class SolicitudSoporte
             return 'ticket_no_existe_o_mismo_estado';
         }
 
-        $grouped = $this->tickets->getStatusListGroupedByType((int) $ticket->projectId);
-        $doneStatuses = array_map('intval', $grouped['DONE'] ?? []);
+        $doneStatuses = [];
+        foreach ($this->tickets->getStateLabels((int) $ticket->projectId) as $statusId => $label) {
+            if (($label['statusType'] ?? '') === 'DONE') {
+                $doneStatuses[] = (int) $statusId;
+            }
+        }
         if (! in_array($newStatus, $doneStatuses, true)) {
             return 'estado_nuevo_no_es_hecho';
         }

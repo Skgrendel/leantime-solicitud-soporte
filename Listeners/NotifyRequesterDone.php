@@ -22,7 +22,10 @@ class NotifyRequesterDone
 
         try {
             $result = $this->service->notifyRequesterDone($ticketId, (int) $payload['status']);
-            Log::error('SolicitudSoporte aviso Hecho: ticket '.$ticketId.' estado '.(int) $payload['status'].' -> '.$result);
+            // El tablero reenvia todos los tickets en cada arrastre: solo se registran los casos relevantes.
+            if (! in_array($result, ['sin_solicitud_ligada_al_ticket', 'ticket_no_existe_o_mismo_estado', 'estado_nuevo_no_es_hecho'], true)) {
+                Log::error('SolicitudSoporte aviso Hecho: ticket '.$ticketId.' estado '.(int) $payload['status'].' -> '.$result);
+            }
         } catch (\Throwable $e) {
             // Nunca debe romper el cambio de estado del tablero.
             Log::error('SolicitudSoporte: fallo al avisar cierre del ticket '.$ticketId.': '.$e->getMessage());
