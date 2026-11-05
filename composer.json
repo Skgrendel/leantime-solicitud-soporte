@@ -1,0 +1,19 @@
+{
+    "name": "proderi/solicitud-soporte",
+    "description": "Formulario publico de solicitudes que crea tickets en Leantime",
+    "version": "1.0.0",
+    "type": "leantime-plugin",
+    "license": "MIT",
+    "homepage": "https://proderi.com",
+    "authors": [
+        {
+            "name": "Proderi",
+            "email": "coordinadordatos@proderi.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Leantime\\Plugins\\SolicitudSoporte\\": "/"
+        }
+    }
+}
