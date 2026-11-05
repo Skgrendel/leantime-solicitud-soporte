@@ -381,38 +381,38 @@ class SolicitudSoporte
      * por eso compara el estado actual del ticket con el nuevo (el Kanban reenvia todas las tarjetas
      * de una columna en cada arrastre). Solo avisa una vez por solicitud.
      */
-    public function notifyRequesterDone(int $ticketId, int $newStatus): void
+    public function notifyRequesterDone(int $ticketId, int $newStatus): string
     {
         $config = $this->getConfig();
         if (empty($config['notifyRequesterDone'])) {
-            return;
+            return 'desactivado_en_configuracion';
         }
 
         $row = $this->table()->where('ticket_id', $ticketId)->first();
         if (! $row) {
-            return; // El ticket no viene del formulario de solicitudes.
+            return 'sin_solicitud_ligada_al_ticket';
         }
         $request = (array) $row;
         if (! empty($request['done_notified_at'])) {
-            return;
+            return 'ya_avisado_antes';
         }
 
         $ticket = $this->tickets->getTicket($ticketId);
         if (! $ticket || (int) $ticket->status === $newStatus) {
-            return;
+            return 'ticket_no_existe_o_mismo_estado';
         }
 
         $grouped = $this->tickets->getStatusListGroupedByType((int) $ticket->projectId);
         $doneStatuses = array_map('intval', $grouped['DONE'] ?? []);
         if (! in_array($newStatus, $doneStatuses, true)) {
-            return;
+            return 'estado_nuevo_no_es_hecho';
         }
 
         // Marca primero (atomico) para no duplicar el aviso si llegan dos eventos a la vez.
         $marked = $this->table()->where('id', $request['id'])->whereNull('done_notified_at')
             ->update(['done_notified_at' => gmdate('Y-m-d H:i:s')]);
         if (! $marked) {
-            return;
+            return 'otro_proceso_ya_avisó';
         }
 
         $this->send([$request['email']], "Su solicitud #{$request['id']} fue atendida",
@@ -430,6 +430,8 @@ class SolicitudSoporte
                 'outro' => 'Si necesita algo más o considera que no quedó resuelta, puede enviar una nueva solicitud.',
                 'footer' => 'Este mensaje fue generado automáticamente.',
             ], $config));
+
+        return 'enviado_a_'.$request['email'];
     }
 
     // ------------------------------------------------------------------ consultas
