@@ -646,7 +646,7 @@ class SolicitudSoporte
             $this->mailer->setHtml($html, true);
             $this->mailer->sendMail($to, 'Solicitudes de soporte');
         } catch (\Throwable $ex) {
-            Log::warning('SolicitudSoporte: no se pudo enviar correo: '.$ex->getMessage());
+            Log::error('SolicitudSoporte: no se pudo enviar correo: '.$ex->getMessage());
         }
     }
 }
