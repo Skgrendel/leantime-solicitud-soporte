@@ -196,11 +196,7 @@ class SolicitudSoporte
         if (count($links) > self::MAX_LINKS) {
             $errors[] = 'Máximo '.self::MAX_LINKS.' enlaces de archivos.';
         }
-        foreach ($links as $link) {
-            if (! self::isAllowedLink($link)) {
-                $errors[] = 'Enlace no válido (use enlaces de OneDrive o SharePoint, que empiecen por https://): '.$link;
-            }
-        }
+        // Los adjuntos son opcionales: los enlaces no válidos se descartan al guardar (ver submitRequest).
 
         return $errors;
     }

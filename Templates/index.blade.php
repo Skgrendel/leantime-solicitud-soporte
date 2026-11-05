@@ -105,7 +105,7 @@ $sel = fn (string $k, string $val) => (($old[$k] ?? '') === $val) ? 'selected' :
                 <textarea name="description" id="description" class="form-control ss-ta-desc" rows="5" required><?= $v('description') ?></textarea>
             </div>
             <div class="form-group">
-                <label for="links">6. Archivos adjuntos (enlaces de OneDrive)</label>
+                <label for="links">6. Archivos adjuntos (opcional, enlaces de OneDrive)</label>
                 <small class="help-block">Suba sus archivos, capturas o vídeos a su OneDrive, copie el enlace para compartir (asegúrese de que el equipo de TI tenga acceso) y péguelo aquí, uno por línea. Máximo 10 enlaces.</small>
                 <textarea name="links" id="links" class="form-control ss-ta-links" rows="3" placeholder="https://1drv.ms/..."><?= $v('links') ?></textarea>
             </div>
