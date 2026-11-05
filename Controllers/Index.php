@@ -50,7 +50,7 @@ class Index extends Controller
 
         try {
             RateLimiter::hit($rateKey, 600);
-            $ticketId = $this->service->createTicket($input);
+            $ticketId = $this->service->submitRequest($input);
         } catch (\Throwable $e) {
             Log::error('SolicitudSoporte: '.$e->getMessage());
 

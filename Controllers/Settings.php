@@ -32,6 +32,7 @@ class Settings extends Controller
             ->map(fn ($u) => ['id' => (int) $u->id, 'name' => trim($u->firstname.' '.$u->lastname).' ('.$u->username.')'])
             ->all();
 
+        $this->tpl->assign('counts', $this->service->countByStatus());
         $this->tpl->assign('config', $this->service->getConfig());
         $this->tpl->assign('projects', $this->projects->getAll(true));
         $this->tpl->assign('users', $users);
@@ -46,6 +47,9 @@ class Settings extends Controller
 
         $config['creatorUserId'] = (int) ($params['creatorUserId'] ?? 0);
         $config['confirmRequester'] = ! empty($params['confirmRequester']);
+        $config['approverEmails'] = implode(', ', SolicitudSoporte::parseEmails((string) ($params['approverEmails'] ?? '')));
+        $logoUrl = trim((string) ($params['logoUrl'] ?? ''));
+        $config['logoUrl'] = filter_var($logoUrl, FILTER_VALIDATE_URL) ? $logoUrl : '';
 
         $types = SolicitudSoporte::parseLines((string) ($params['requestTypes'] ?? ''));
         if ($types) {

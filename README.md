@@ -1,42 +1,68 @@
 # Solicitud de Soporte (plugin de Leantime)
 
-Plugin de [Leantime](https://leantime.io) que agrega un **formulario público de solicitudes** (sin login). Cada envío crea un ticket en el proyecto del área elegida y puede notificar por correo al equipo de TI y al solicitante.
+Plugin de [Leantime](https://leantime.io) con un **formulario público de solicitudes** (sin login) y una **bandeja de aprobación**. Una solicitud solo se convierte en ticket cuando un administrador la aprueba.
 
 - **Versión de Leantime probada:** 3.7.3 (PHP 8.2)
 - **Áreas:** Ticket de Soporte y Análisis de Datos
 - **Empresas del solicitante:** Proderi y Acoficum
 
-## Qué hace
+## Flujo
 
-1. La persona abre `/SolicitudSoporte/index` y llena el formulario:
-   empresa, nombre, correo, cargo/área, área destino, tipo de solicitud, prioridad, motivo, descripción y enlaces de OneDrive.
-2. El plugin crea un ticket en el proyecto asociado al área.
-3. Envía (opcionalmente) un correo de confirmación al solicitante y un aviso a los correos de TI configurados para esa área.
+```
+Formulario público ──> Solicitud PENDIENTE ──┬─> Aprobar  ──> Se crea el ticket + correo al área
+   (/SolicitudSoporte/index)   (tabla propia)  │
+                                              └─> Rechazar ──> Correo al solicitante con el motivo
+```
 
-### Cómo se guarda cada solicitud
+1. La persona llena el formulario: empresa, nombre, correo, cargo/área, área destino, tipo de solicitud, prioridad, motivo, descripción y enlaces de OneDrive.
+2. La solicitud queda **pendiente** en una tabla del plugin. **No se crea ticket todavía.**
+3. Correos al enviar:
+   - **Aprobadores:** aviso de solicitud pendiente, con botón a la bandeja.
+   - **Solicitante:** acuse de recibo (se puede desactivar).
+4. Un admin/owner entra a **Empresa > Solicitudes de soporte** (`/SolicitudSoporte/solicitudes`), revisa el detalle y:
+   - **Aprueba** (comentario opcional): se crea el ticket en el proyecto del área y se envía el correo *"Nueva solicitud aprobada para atención"* a los correos de TI de esa área. El comentario del aprobador va en el correo y en el ticket.
+   - **Rechaza** (motivo **obligatorio**): se envía al solicitante el correo *"Su solicitud no fue aprobada"* con el motivo. No se crea ticket.
+5. Una solicitud solo se puede decidir una vez; si dos personas intentan decidirla a la vez, la segunda recibe un aviso.
 
-| Dato del formulario | Dónde queda en el ticket |
+### Cómo queda el ticket al aprobar
+
+| Dato | Dónde queda |
 |---|---|
 | Motivo | Título |
-| Datos del solicitante, tipo, prioridad textual, descripción y enlaces | Descripción (todo escapado, sin HTML del usuario) |
-| Prioridad | Prioridad de Leantime: Urgente=1, Alta=2, Media=3, Baja=4 |
-| Empresa y tipo de solicitud | Etiquetas (tags) |
+| Solicitante, tipo, referencia, descripción, enlaces y comentario del aprobador | Descripción (todo escapado) |
+| Prioridad | Urgente=1, Alta=2, Media=3, Baja=4 |
+| Empresa y tipo de solicitud | Etiquetas |
 | Estado | Nuevo (3) |
 
-El ticket figura como creado por un usuario de Leantime (por defecto el administrador; se puede cambiar en la configuración).
+El ticket figura como creado por el usuario configurado o, por defecto, **quien aprueba**.
 
-### Adjuntos
+## Correos
 
-No se suben archivos. La persona pega **enlaces de OneDrive/SharePoint** (uno por línea, máximo 10) y quedan en la descripción del ticket. Solo se aceptan enlaces `https` de estos dominios: `1drv.ms`, `onedrive.live.com`, `onedrive.com` y `*.sharepoint.com`. La lista está en `ALLOWED_LINK_HOSTS` de `Services/SolicitudSoporte.php`.
+Todos usan el mismo diseño (barra lateral oscura con logo, tarjeta con tabla de detalles y botón).
 
-### Anti-spam
+| Momento | Destinatario | Asunto |
+|---|---|---|
+| Se envía la solicitud | Aprobadores | Solicitud #N pendiente de aprobación |
+| Se envía la solicitud | Solicitante (opcional) | Hemos recibido su solicitud #N |
+| Se aprueba | Correos de TI del área | Nueva solicitud aprobada #N |
+| Se rechaza | Solicitante | Su solicitud #N no fue aprobada |
+
+Los aprobadores avisados son los correos configurados o, si no hay ninguno, **todos los administradores y owners de Leantime**. Un fallo de correo nunca impide aprobar o rechazar; queda registrado en `storage/logs`.
+
+Logo: se usa la URL configurada en el plugin; si está vacía, el logo de Leantime (solo si no es SVG, porque muchos clientes de correo no los muestran). Para que se vea en el correo debe ser accesible desde Internet.
+
+## Adjuntos
+
+No se suben archivos. La persona pega **enlaces de OneDrive/SharePoint** (uno por línea, máximo 10). Solo se aceptan enlaces `https` de `1drv.ms`, `onedrive.live.com`, `onedrive.com` y `*.sharepoint.com` (constante `ALLOWED_LINK_HOSTS` en `Services/SolicitudSoporte.php`).
+
+## Anti-spam
 
 - Campo oculto (honeypot) que atrapa bots.
 - Máximo 5 envíos por IP cada 10 minutos.
 
 ## Instalación
 
-El plugin debe quedar en `app/Plugins/SolicitudSoporte/` dentro de Leantime (el nombre de la carpeta debe ser exactamente ese).
+El plugin debe quedar en `app/Plugins/SolicitudSoporte/` (nombre de carpeta exacto).
 
 ```bash
 # 1. Copiar la carpeta del plugin a app/Plugins/SolicitudSoporte
@@ -45,47 +71,48 @@ php bin/leantime plugin:install proderi/solicitud-soporte
 php bin/leantime plugin:enable proderi/solicitud-soporte
 ```
 
-También se puede activar desde Leantime en **Administración de la empresa > Plugins**.
+También desde **Administración de la empresa > Plugins**. Copiar la carpeta no activa nada.
 
-Copiar la carpeta no activa nada: el plugin solo funciona cuando se instala y habilita.
+**Base de datos:** el plugin crea su propia tabla `zp_solicitudsoporte_requests` al instalarse (y bajo demanda si falta). No modifica tablas de Leantime. Desinstalar el plugin **no** borra la tabla ni las solicitudes.
 
 ### Requisitos previos
 
-- Los proyectos de destino. Por defecto el plugin busca proyectos llamados **"Ticket de soporte"** y **"Analisis de Datos"** (sin importar mayúsculas), o puedes elegir otros en la configuración.
-- Un servidor SMTP configurado en Leantime si quieres correos (`LEAN_EMAIL_*` en `config/.env`). Sin SMTP el ticket se crea igual; solo no se envían correos.
+- Proyectos de destino. Por defecto busca **"Ticket de soporte"** y **"Analisis de Datos"** (sin importar mayúsculas), o se eligen en la configuración. Sin proyecto, aprobar falla con un mensaje claro y la solicitud sigue pendiente.
+- Servidor SMTP configurado en Leantime (`LEAN_EMAIL_*` en `config/.env`) para los correos. Sin SMTP el flujo funciona, solo que no salen correos.
 
 ## Configuración
 
-Menú **Empresa > Solicitudes de soporte** (`/SolicitudSoporte/settings`), solo para owner y admin:
+**Empresa > Config. solicitudes** (`/SolicitudSoporte/settings`), solo owner/admin:
 
-- Proyecto de destino de cada área (o automático por nombre).
-- Correos de TI a notificar por área (uno por línea o separados por coma).
-- Activar/desactivar la confirmación al solicitante.
-- Usuario que figura como creador de los tickets.
+- Proyecto de destino y correos de TI de cada área.
+- Correos de los aprobadores (vacío = todos los admin/owner).
+- Acuse de recibo al solicitante (sí/no).
+- URL del logo para los correos.
+- Usuario creador de los tickets (vacío = quien aprueba).
 - Lista de tipos de solicitud (uno por línea).
 
-Todo se guarda en la tabla de ajustes de Leantime bajo la clave `plugins.solicitudsoporte.config` (JSON).
+Se guarda en la tabla de ajustes de Leantime bajo `plugins.solicitudsoporte.config` (JSON).
 
 ## Estructura
 
 ```
-register.php                     Menú, idiomas y ruta pública
+register.php                     Menús, idiomas y ruta pública
 composer.json                    Metadatos del plugin
-Controllers/Index.php            Formulario público (GET/POST)
-Controllers/Settings.php         Configuración (solo admin)
-Services/SolicitudSoporte.php    Validación, creación del ticket y correos
-Templates/index.blade.php        Formulario
-Templates/settings.blade.php     Pantalla de configuración
+Controllers/Index.php            Formulario público
+Controllers/Solicitudes.php      Bandeja: listar, aprobar, rechazar (admin)
+Controllers/Settings.php         Configuración (admin)
+Services/SolicitudSoporte.php    Tabla, flujo, ticket y correos
+Templates/                       index, solicitudes, settings
 Language/                        es-ES y en-US
 ```
 
 ## Desarrollo local con Docker
 
-El Docker del proyecto Leantime monta esta carpeta como volumen en `app/Plugins/SolicitudSoporte` y trae Mailpit para ver los correos en http://localhost:8025. Esa configuración es solo local y no se sube al repo de Leantime.
+El Docker local del proyecto Leantime monta esta carpeta en `app/Plugins/SolicitudSoporte` e incluye Mailpit para ver los correos en http://localhost:8025. Es solo local y no se sube al repo de Leantime.
 
-## Notas y solución de problemas
+## Solución de problemas
 
-- **El formulario pide login:** la ruta pública se declara en `register.php`. Verifica que el plugin esté activado.
-- **`Invalid plugin name` al instalar:** usa el nombre de composer (`proderi/solicitud-soporte`), no el de la carpeta. Si no aparece en `plugin:list`, revisa que `composer.json` tenga `homepage` y `authors`.
+- **El formulario pide login:** verifica que el plugin esté activado (la ruta pública se declara en `register.php`).
+- **`Invalid plugin name` al instalar:** usa el nombre de composer (`proderi/solicitud-soporte`). Si no aparece en `plugin:list`, revisa que `composer.json` tenga `homepage` y `authors`.
 - **Cambié la configuración directo en la base de datos y no se refleja:** Leantime cachea los ajustes; borra `storage/framework/cache/*`. Guardar desde la pantalla de configuración no lo necesita.
-- **Los correos no salen:** revisa el SMTP de Leantime. Un fallo de correo nunca impide crear el ticket; queda registrado en `storage/logs`.
+- **No llegan correos:** revisa el SMTP de Leantime y `storage/logs`.

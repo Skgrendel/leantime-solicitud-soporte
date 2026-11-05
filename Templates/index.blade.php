@@ -13,8 +13,8 @@ $sel = fn (string $k, string $val) => (($old[$k] ?? '') === $val) ? 'selected' :
 <div class="regcontent">
     @if ($sentTicket > 0)
         <div class="alert alert-success" style="padding:12px;margin-bottom:16px;">
-            <strong>¡Solicitud enviada!</strong> Su número de ticket es <strong>#{{ $sentTicket }}</strong>.
-            Nuestro equipo de TI la atenderá a la brevedad.
+            <strong>¡Solicitud enviada!</strong> Su referencia es <strong>#{{ $sentTicket }}</strong>.
+            Será revisada para aprobación y le informaremos la decisión por correo.
         </div>
         <p><a href="<?= BASE_URL ?>/SolicitudSoporte/index">Enviar otra solicitud</a></p>
     @else

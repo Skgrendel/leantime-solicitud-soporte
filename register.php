@@ -6,11 +6,12 @@ use Leantime\Domain\Plugins\Services\Registration;
 $registration = app()->makeWith(Registration::class, ['pluginId' => 'SolicitudSoporte']);
 $registration->registerLanguageFiles(['es-ES', 'en-US']);
 $registration->addMenuItem([
-    'title' => 'solicitudsoporte.menu.title',
-    'icon' => 'fa fa-life-ring',
-    'tooltip' => 'solicitudsoporte.menu.tooltip',
-    'href' => '/SolicitudSoporte/settings',
+    'title' => 'solicitudsoporte.menu.inbox',
+    'icon' => 'fa fa-inbox',
+    'tooltip' => 'solicitudsoporte.menu.inbox_tooltip',
+    'href' => '/SolicitudSoporte/solicitudes',
 ], 'company', [16]);
+// La configuracion es una pestana dentro de la misma pantalla (no tiene entrada propia en el menu).
 
 // El formulario es publico: no exige iniciar sesion en Leantime.
 // La comparacion de rutas distingue mayusculas, por eso se declaran ambas variantes.
