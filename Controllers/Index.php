@@ -67,7 +67,7 @@ class Index extends Controller
         $this->tpl->assign('errors', $errors);
         $this->tpl->assign('sentTicket', $sent);
         $this->tpl->assign('areas', $config['areas']);
-        $this->tpl->assign('companies', SolicitudSoporte::COMPANIES);
+        $this->tpl->assign('companies', $this->service->getCompanies());
         $this->tpl->assign('requestTypes', $this->service->getRequestTypes());
         $this->tpl->assign('priorities', array_keys(SolicitudSoporte::PRIORITIES));
 

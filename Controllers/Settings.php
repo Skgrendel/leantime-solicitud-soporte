@@ -51,6 +51,11 @@ class Settings extends Controller
         $logoUrl = trim((string) ($params['logoUrl'] ?? ''));
         $config['logoUrl'] = filter_var($logoUrl, FILTER_VALIDATE_URL) ? $logoUrl : '';
 
+        $companies = SolicitudSoporte::parseLines((string) ($params['companies'] ?? ''));
+        if ($companies) {
+            $config['companies'] = implode("\n", $companies);
+        }
+
         $types = SolicitudSoporte::parseLines((string) ($params['requestTypes'] ?? ''));
         if ($types) {
             $config['requestTypes'] = implode("\n", $types);

@@ -94,6 +94,11 @@
                         </select>
                     </div>
                     <div class="form-group">
+                        <label>Empresas del solicitante</label>
+                        <textarea name="companies" class="form-control" rows="4">{{ $config['companies'] }}</textarea>
+                        <small class="help-block">Una por línea. Es la lista del desplegable "Empresa" del formulario. Las solicitudes ya recibidas conservan su empresa aunque la quites de la lista.</small>
+                    </div>
+                    <div class="form-group">
                         <label>Tipos de solicitud</label>
                         <textarea name="requestTypes" class="form-control" rows="10">{{ $config['requestTypes'] }}</textarea>
                         <small class="help-block">Uno por línea. Es la lista del desplegable del formulario.</small>

@@ -20,8 +20,6 @@ class SolicitudSoporte
 
     public const STATUS_REJECTED = 'rejected';
 
-    public const COMPANIES = ['Proderi', 'Acoficum'];
-
     public const PRIORITIES = ['Urgente' => 1, 'Alta' => 2, 'Media' => 3, 'Baja' => 4];
 
     /** Solo se aceptan enlaces de OneDrive / SharePoint (evita enlaces maliciosos en un formulario publico). */
@@ -94,6 +92,7 @@ class SolicitudSoporte
             'confirmRequester' => true,
             'approverEmails' => '',
             'logoUrl' => '',
+            'companies' => "Proderi\nAcoficum",
             'requestTypes' => implode("\n", [
                 'Automatizaciones en Microsoft', 'Soporte Técnico', 'Soporte Técnico de Plataforma',
                 'Solicitud Área de Datos', 'Mantenimiento Correctivo', 'Mantenimiento Preventivo',
@@ -137,6 +136,14 @@ class SolicitudSoporte
     }
 
     /** @return string[] */
+    public function getCompanies(): array
+    {
+        $companies = self::parseLines((string) $this->getConfig()['companies']);
+
+        return $companies ?: self::parseLines((string) self::defaultConfig()['companies']);
+    }
+
+    /** @return string[] */
     public static function parseLines(string $raw): array
     {
         $lines = preg_split('/\R/', $raw) ?: [];
@@ -163,7 +170,7 @@ class SolicitudSoporte
         if (! isset($config['areas'][$in['area'] ?? ''])) {
             $errors[] = 'Seleccione el área a la que dirige la solicitud.';
         }
-        if (! in_array($in['company'] ?? '', self::COMPANIES, true)) {
+        if (! in_array($in['company'] ?? '', $this->getCompanies(), true)) {
             $errors[] = 'Seleccione la empresa.';
         }
         if (trim((string) ($in['name'] ?? '')) === '') {

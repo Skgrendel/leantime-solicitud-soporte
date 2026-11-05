@@ -10,6 +10,13 @@ $sel = fn (string $k, string $val) => (($old[$k] ?? '') === $val) ? 'selected' :
     <div class="pagetitle"><h1>Solicitud de Soporte Técnico</h1></div>
 </div>
 
+<style>
+    /* Mismo ancho para todos los campos y alturas fijas para las areas de texto */
+    .regcontent .form-control { width:100% !important; max-width:100% !important; box-sizing:border-box !important; }
+    .regcontent textarea.form-control { resize:vertical; overflow-x:hidden !important; overflow-y:auto; white-space:pre-wrap; min-height:0 !important; }
+    .regcontent textarea.ss-ta-desc { height:150px !important; }
+    .regcontent textarea.ss-ta-links { height:84px !important; }
+</style>
 <div class="regcontent">
     @if ($sentTicket > 0)
         <div class="alert alert-success" style="padding:12px;margin-bottom:16px;">
@@ -95,12 +102,12 @@ $sel = fn (string $k, string $val) => (($old[$k] ?? '') === $val) ? 'selected' :
             <div class="form-group">
                 <label for="description">5. Descripción del problema o solicitud *</label>
                 <small class="help-block">Explique qué estaba haciendo cuando ocurrió el error, incluya mensajes de error y si el problema es persistente o aleatorio.</small>
-                <textarea name="description" id="description" class="form-control" rows="5" required><?= $v('description') ?></textarea>
+                <textarea name="description" id="description" class="form-control ss-ta-desc" rows="5" required><?= $v('description') ?></textarea>
             </div>
             <div class="form-group">
                 <label for="links">6. Archivos adjuntos (enlaces de OneDrive)</label>
                 <small class="help-block">Suba sus archivos, capturas o vídeos a su OneDrive, copie el enlace para compartir (asegúrese de que el equipo de TI tenga acceso) y péguelo aquí, uno por línea. Máximo 10 enlaces.</small>
-                <textarea name="links" id="links" class="form-control" rows="3" placeholder="https://1drv.ms/..."><?= $v('links') ?></textarea>
+                <textarea name="links" id="links" class="form-control ss-ta-links" rows="3" placeholder="https://1drv.ms/..."><?= $v('links') ?></textarea>
             </div>
 
             <input type="submit" value="Enviar solicitud" class="btn btn-primary">
