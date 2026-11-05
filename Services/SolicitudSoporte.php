@@ -73,6 +73,13 @@ class SolicitudSoporte
             });
         }
 
+        // Instalaciones previas: agrega la columna que evita avisar dos veces el cierre.
+        if (! $schema->hasColumn(self::TABLE, 'done_notified_at')) {
+            $schema->table(self::TABLE, function ($t) {
+                $t->dateTime('done_notified_at')->nullable();
+            });
+        }
+
         self::$tableChecked = true;
     }
 
@@ -90,6 +97,7 @@ class SolicitudSoporte
         return [
             'creatorUserId' => 0,
             'confirmRequester' => true,
+            'notifyRequesterDone' => true,
             'approverEmails' => '',
             'logoUrl' => '',
             'companies' => "Proderi\nAcoficum",
@@ -364,6 +372,62 @@ class SolicitudSoporte
                     ['Motivo del rechazo', nl2br($this->e($reason))],
                 ],
                 'outro' => 'Si lo considera necesario, puede enviar una nueva solicitud con la información ajustada.',
+                'footer' => 'Este mensaje fue generado automáticamente.',
+            ], $config));
+    }
+
+    /**
+     * Avisa al solicitante que su ticket paso a "Hecho". Se llama ANTES de que el estado se guarde,
+     * por eso compara el estado actual del ticket con el nuevo (el Kanban reenvia todas las tarjetas
+     * de una columna en cada arrastre). Solo avisa una vez por solicitud.
+     */
+    public function notifyRequesterDone(int $ticketId, int $newStatus): void
+    {
+        $config = $this->getConfig();
+        if (empty($config['notifyRequesterDone'])) {
+            return;
+        }
+
+        $row = $this->table()->where('ticket_id', $ticketId)->first();
+        if (! $row) {
+            return; // El ticket no viene del formulario de solicitudes.
+        }
+        $request = (array) $row;
+        if (! empty($request['done_notified_at'])) {
+            return;
+        }
+
+        $ticket = $this->tickets->getTicket($ticketId);
+        if (! $ticket || (int) $ticket->status === $newStatus) {
+            return;
+        }
+
+        $grouped = $this->tickets->getStatusListGroupedByType((int) $ticket->projectId);
+        $doneStatuses = array_map('intval', $grouped['DONE'] ?? []);
+        if (! in_array($newStatus, $doneStatuses, true)) {
+            return;
+        }
+
+        // Marca primero (atomico) para no duplicar el aviso si llegan dos eventos a la vez.
+        $marked = $this->table()->where('id', $request['id'])->whereNull('done_notified_at')
+            ->update(['done_notified_at' => gmdate('Y-m-d H:i:s')]);
+        if (! $marked) {
+            return;
+        }
+
+        $this->send([$request['email']], "Su solicitud #{$request['id']} fue atendida",
+            $this->renderEmail([
+                'title' => 'Su solicitud fue atendida',
+                'icon' => '✅',
+                'greeting' => 'Hola '.$this->e($request['name']).',',
+                'intro' => 'Le informamos que su solicitud ya fue atendida y quedó en estado <strong>Hecho</strong>. Estos son los detalles:',
+                'rows' => [
+                    ['Referencia', '#'.(int) $request['id']],
+                    ['Tipo de solicitud', $this->e($request['type'])],
+                    ['Prioridad', $this->e($request['priority'])],
+                    ['Asunto', $this->e($request['subject'])],
+                ],
+                'outro' => 'Si necesita algo más o considera que no quedó resuelta, puede enviar una nueva solicitud.',
                 'footer' => 'Este mensaje fue generado automáticamente.',
             ], $config));
     }

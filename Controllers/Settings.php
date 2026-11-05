@@ -47,6 +47,7 @@ class Settings extends Controller
 
         $config['creatorUserId'] = (int) ($params['creatorUserId'] ?? 0);
         $config['confirmRequester'] = ! empty($params['confirmRequester']);
+        $config['notifyRequesterDone'] = ! empty($params['notifyRequesterDone']);
         $config['approverEmails'] = implode(', ', SolicitudSoporte::parseEmails((string) ($params['approverEmails'] ?? '')));
         $logoUrl = trim((string) ($params['logoUrl'] ?? ''));
         $config['logoUrl'] = filter_var($logoUrl, FILTER_VALIDATE_URL) ? $logoUrl : '';

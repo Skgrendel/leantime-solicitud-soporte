@@ -76,6 +76,12 @@
                         </label>
                     </div>
                     <div class="form-group">
+                        <label style="font-weight:normal;">
+                            <input type="checkbox" name="notifyRequesterDone" value="1" <?= ! empty($config['notifyRequesterDone']) ? 'checked' : '' ?>>
+                            Avisar al solicitante cuando su ticket pase a "Hecho"
+                        </label>
+                    </div>
+                    <div class="form-group">
                         <label>URL del logo para los correos (opcional)</label>
                         <input type="url" name="logoUrl" class="form-control" value="{{ $config['logoUrl'] }}" placeholder="https://.../logo.png">
                         <small class="help-block">Imagen PNG/JPG accesible desde Internet. Vacío = logo configurado en Leantime.</small>
