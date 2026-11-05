@@ -19,6 +19,12 @@ EventDispatcher::add_event_listener(
     \Leantime\Plugins\SolicitudSoporte\Listeners\NotifyRequesterDone::class
 );
 
+// Boton con contador de pendientes en la barra superior (solo owner/admin).
+EventDispatcher::add_event_listener(
+    'leantime.*.insideHeadMenu',
+    \Leantime\Plugins\SolicitudSoporte\Listeners\PendingRequestsButton::class
+);
+
 // El formulario es publico: no exige iniciar sesion en Leantime.
 // La comparacion de rutas distingue mayusculas, por eso se declaran ambas variantes.
 EventDispatcher::add_filter_listener('leantime.core.middleware.authcheck.*publicActions', function (array $actions) {
